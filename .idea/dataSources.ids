@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component name="dataSourceStorage">
+  <data-source name="MySQL - test@localhost" uuid="9fcd3af8-1294-4bf5-8830-af9e8caec5b1">
+    <database-info product="MySQL" version="5.7.9" jdbc-version="4.0" driver-name="MySQL Connector Java" driver-version="mysql-connector-java-5.1.40 ( Revision: 402933ef52cad9aa82624e80acbea46e3a701ce6 )">
+      <extra-name-characters>#@</extra-name-characters>
+      <identifier-quote-string>`</identifier-quote-string>
+    </database-info>
+    <case-sensitivity plain-identifiers="lower" quoted-identifiers="lower"/>
+    <database-model serializer="dbm" rdbms="MYSQL" format-version="2.6">
+      <schema id="1" name="test">
+        <visible>1</visible>
+      </schema>
+      <schema id="2" name="information_schema"/>
+      <schema id="3" name="mysql"/>
+      <schema id="4" name="performance_schema"/>
+      <schema id="5" name="runoob"/>
+      <schema id="6" name="sys"/>
+      <schema id="7" name="xpmplus"/>
+      <schema id="8" name="xpmplus_forms"/>
+      <schema id="9" name="xpmplus_hp"/>
+      <table id="10" parent="1" name="websites"/>
+      <column id="11" parent="10" name="id">
+        <mandatory>1</mandatory>
+        <data-type>int(11)|0</data-type>
+        <sequence-identity>1</sequence-identity>
+      </column>
+      <column id="12" parent="10" name="name">
+        <comment>站点名称</comment>
+        <mandatory>1</mandatory>
+        <data-type>char(20)|0</data-type>
+        <default-expression>&apos;&apos;</default-expression>
+      </column>
+      <column id="13" parent="10" name="url">
+        <mandatory>1</mandatory>
+        <data-type>varchar(255)|0</data-type>
+        <default-expression>&apos;&apos;</default-expression>
+      </column>
+      <column id="14" parent="10" name="alexa">
+        <comment>Alexa 排名</comment>
+        <mandatory>1</mandatory>
+        <data-type>int(11)|0</data-type>
+        <default-expression>&apos;0&apos;</default-expression>
+      </column>
+      <column id="15" parent="10" name="country">
+        <comment>国家</comment>
+        <mandatory>1</mandatory>
+        <data-type>char(10)|0</data-type>
+        <default-expression>&apos;&apos;</default-expression>
+      </column>
+      <key id="16" parent="10" name="PRIMARY">
+        <columns>id</columns>
+        <primary>1</primary>
+      </key>
+    </database-model>
+  </data-source>
+</component>
