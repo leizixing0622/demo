@@ -1,10 +1,11 @@
 package com.org.entity;
 
 import javax.persistence.*;
+import java.io.Serializable;
 
 @Entity
 @Table(name="websites")
-public class Websites {
+public class Websites implements Serializable{
 
   @Id
   @GeneratedValue(strategy= GenerationType.AUTO)

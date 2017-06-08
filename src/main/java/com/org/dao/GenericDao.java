@@ -1,5 +1,7 @@
 package com.org.dao;
 
+import com.org.entity.PageRequest;
+
 import java.io.Serializable;
 import java.util.List;
 
@@ -19,4 +21,10 @@ public interface GenericDao<T extends Serializable, PK extends Serializable> {
     public void delete(T entity);
     //根据主键删除实体
     public void deleteById(PK id);
+    //查询总条数
+    public int getTotalCount(Object o);
+    //根据每页条数，得到页数
+    public int getPageCount(int eachPageCount, Object o);
+    //根据页码进行查找
+    public List<T> findByPageNumber(PageRequest pageRequest, Object o);
 }
