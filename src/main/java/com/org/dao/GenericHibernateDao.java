@@ -2,6 +2,7 @@ package com.org.dao;
 
 import com.org.entity.PageRequest;
 import com.org.entity.PageResponse;
+import com.org.entity.SearchInfo;
 import com.org.entity.SortInfo;
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
@@ -63,19 +64,44 @@ public abstract class GenericHibernateDao<T extends Serializable, PK extends Ser
         this.delete(this.getById(id));
     }
 
-    public int getTotalCount(Object o) {
-        DetachedCriteria detachedCriteria = DetachedCriteria.forClass(this.entityClass);
-        detachedCriteria.setProjection(Projections.rowCount());
-        detachedCriteria.add(Example.create(o).ignoreCase());
-        List<T> ts = getHibernateTemplate().findByCriteria(detachedCriteria);
-        return Integer.parseInt(ts.get(0).toString());
+    public String getDefaultSearchFieldData() {
+        return null;
     }
 
-    public int getPageCount(int eachPageCount, Object o) {
+    public PageRequest initPageRequest(PageRequest pageRequest) {
+        int totalCount = this.getTotalCount(pageRequest);
+        if(totalCount == 0) {
+            return null;
+        }else{
+            if(pageRequest.getEachPageCount() > totalCount) {
+                pageRequest.setEachPageCount(totalCount);
+            }
+            int pageCount = (totalCount % pageRequest.getEachPageCount() == 0) ? (totalCount / pageRequest.getEachPageCount()) : (totalCount / pageRequest.getEachPageCount()) + 1;
+            if(pageRequest.getPageNumber() > pageCount) {
+                pageRequest.setPageNumber(pageCount);
+            }
+            return pageRequest;
+        }
+    }
+
+    public int getTotalCount(PageRequest pageRequest) {
+        DetachedCriteria detachedCriteria = DetachedCriteria.forClass(this.entityClass);
+        detachedCriteria.setProjection(Projections.rowCount());
+        String searchFieldData = isEmpty(pageRequest.getSearchContent()) ? getDefaultSearchFieldData() : pageRequest.getSearchContent();
+        List<SearchInfo> searchInfos = SearchInfo.initSortFieldName(searchFieldData);
+        for(SearchInfo searchInfo : searchInfos) {
+            detachedCriteria.add(Restrictions.like(searchInfo.getSearchFieldName(), "%" + searchInfo.getSearchContent() + "%"));
+        }
+        List<T> ts = getHibernateTemplate().findByCriteria(detachedCriteria);
+        int totalCount = Integer.parseInt(ts.get(0).toString());
+        return totalCount;
+    }
+
+    public int getPageCount(PageRequest pageRequest) {
         int pageCount;
         int actualEachPageCount;
-        int totalCount = this.getTotalCount(o);
-        actualEachPageCount = eachPageCount > totalCount ? totalCount : eachPageCount;
+        int totalCount = this.getTotalCount(pageRequest);
+        actualEachPageCount = pageRequest.getEachPageCount() > totalCount ? totalCount : pageRequest.getEachPageCount();
         if(totalCount > 0) {
             pageCount = (totalCount % actualEachPageCount == 0) ? (totalCount / actualEachPageCount) : (totalCount / actualEachPageCount) + 1;
         }else{
@@ -84,37 +110,46 @@ public abstract class GenericHibernateDao<T extends Serializable, PK extends Ser
         return pageCount;
     }
 
-    public PageResponse<T> findByPageNumber(final PageRequest pageRequest, Object o) {
-        List<T> ts = new ArrayList<T>();
-        String sortFieldName = isEmpty(pageRequest.getSortField()) ? getDefaultSortFieldName() : pageRequest.getSortField();
-        List<SortInfo> sortInfos = new ArrayList<SortInfo>();
-        if(!isEmpty(sortFieldName)) {
-            sortInfos = SortInfo.initSortFieldName(sortFieldName);
-        }
-        if(this.getTotalCount(o) > 0) {
-            final DetachedCriteria detachedCriteria = DetachedCriteria.forClass(this.entityClass);
-            detachedCriteria.add(Example.create(o));
-            for(SortInfo sortInfo : sortInfos) {
-                if(sortInfo.getSortOrder().equals("desc")) {
-                    detachedCriteria.addOrder(Order.desc(sortInfo.getSortFieldName()));
-                }else{
-                    detachedCriteria.addOrder(Order.asc(sortInfo.getSortFieldName()));
+    public PageResponse<T> findByPageNumber(PageRequest pageRequest2, Object o) {
+        final PageRequest pageRequest = this.initPageRequest(pageRequest2);
+        if(pageRequest == null) {
+            PageResponse pageResponse = new PageResponse<T>();
+            pageResponse.setPageRequest(pageRequest);
+            pageResponse.setTotalCount(0);
+            pageResponse.setResult(new ArrayList<T>());
+            return pageResponse;
+        }else{
+            String sortFieldData = isEmpty(pageRequest.getSortField()) ? getDefaultSortFieldData() : pageRequest.getSortField();
+            List<SortInfo> sortInfos = SortInfo.initSortFieldName(sortFieldData);
+            List<T> ts = new ArrayList<T>();
+            if(this.getTotalCount(pageRequest) > 0) {
+                final DetachedCriteria detachedCriteria = DetachedCriteria.forClass(this.entityClass);
+                for(SortInfo sortInfo : sortInfos) {
+                    if(sortInfo.getSortOrder().equals("desc")) {
+                        detachedCriteria.addOrder(Order.desc(sortInfo.getSortFieldName()));
+                    }else{
+                        detachedCriteria.addOrder(Order.asc(sortInfo.getSortFieldName()));
+                    }
                 }
+                ts = getHibernateTemplate().execute(new HibernateCallback<List<T>>() {
+                    public List<T> doInHibernate(Session session) throws HibernateException, SQLException {
+                        Criteria criteria = detachedCriteria.getExecutableCriteria(session);
+                        List<SearchInfo> searchInfos = SearchInfo.initSortFieldName(pageRequest.getSearchContent());
+                        for(SearchInfo searchInfo : searchInfos) {
+                            criteria.add(Restrictions.like(searchInfo.getSearchFieldName(), "%" + searchInfo.getSearchContent() + "%"));
+                        }
+                        criteria.setFirstResult(pageRequest.getStartIndex());
+                        criteria.setMaxResults(pageRequest.getEachPageCount());
+                        System.out.println(criteria.list().get(0).toString());
+                        return criteria.list();
+                    }
+                });
             }
-            ts = getHibernateTemplate().execute(new HibernateCallback<List<T>>() {
-                public List<T> doInHibernate(Session session) throws HibernateException, SQLException {
-                    Criteria criteria = detachedCriteria.getExecutableCriteria(session);
-                    criteria.setFirstResult(pageRequest.getStartIndex());
-                    criteria.setMaxResults(pageRequest.getEachPageCount());
-                    System.out.println(criteria.list().get(0).toString());
-                    return criteria.list();
-                }
-            });
+            PageResponse pageResponse = new PageResponse<T>();
+            pageResponse.setPageRequest(pageRequest);
+            pageResponse.setTotalCount(this.getTotalCount(pageRequest));
+            pageResponse.setResult(ts);
+            return pageResponse;
         }
-        PageResponse pageResponse = new PageResponse<T>();
-        pageResponse.setPageRequest(pageRequest);
-        pageResponse.setTotalCount(this.getTotalCount(o));
-        pageResponse.setResult(ts);
-        return pageResponse;
     }
 }

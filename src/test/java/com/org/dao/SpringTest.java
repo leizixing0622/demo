@@ -3,7 +3,6 @@ package com.org.dao;
 import com.org.dao.demo.DemoDaoImpl;
 import com.org.entity.PageRequest;
 import com.org.entity.Websites;
-import com.org.service.demo.DemoServiceImpl;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,10 +20,12 @@ public class SpringTest {
 
     @Test
     public void testSave(){
-        PageRequest pageRequest = new PageRequest(2, 2);
+        PageRequest pageRequest = new PageRequest(2, 3);
+        pageRequest.setSearchContent("name 淘");
         List<Websites> websitesList = demoDao.findByPageNumber(pageRequest, new Websites()).getResult();
         for(int i = 0; i < websitesList.size(); i ++) {
             System.out.println(websitesList.get(i));
         }
+        System.out.println(demoDao.getTotalCount(pageRequest));
     }
 }

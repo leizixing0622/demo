@@ -23,11 +23,15 @@ public interface GenericDao<T extends Serializable, PK extends Serializable> {
     //根据主键删除实体
     public void deleteById(PK id);
     //查询总条数
-    public int getTotalCount(Object o);
+    public int getTotalCount(PageRequest pageRequest);
     //根据每页条数，得到页数
-    public int getPageCount(int eachPageCount, Object o);
+    public int getPageCount(PageRequest pageRequest);
     //根据页码进行查找
     public PageResponse<T> findByPageNumber(PageRequest pageRequest, Object o);
     //得到默认的排序列
-    public String getDefaultSortFieldName();
+    public String getDefaultSortFieldData();
+    //得到默认的搜索列
+    public String getDefaultSearchFieldData();
+    //初始化pageRequest
+    public PageRequest initPageRequest(PageRequest pageRequest);
 }

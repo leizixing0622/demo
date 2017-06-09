@@ -64,4 +64,15 @@ public class PageRequest implements Serializable {
             return (this.getPageNumber() - 1) * eachPageCount;
         }
     }
+
+    @Override
+    public String toString() {
+        return "PageRequest{" +
+                "pageNumber=" + pageNumber +
+                ", eachPageCount=" + eachPageCount +
+                ", sortField='" + sortField + '\'' +
+                ", searchContent='" + searchContent + '\'' +
+                ", startIndex=" + startIndex +
+                '}';
+    }
 }
