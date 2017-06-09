@@ -1,20 +1,25 @@
 package com.org.dao;
 
 import com.org.entity.PageRequest;
-import org.hibernate.criterion.DetachedCriteria;
-import org.hibernate.criterion.Example;
-import org.hibernate.criterion.Projection;
-import org.hibernate.criterion.Projections;
+import com.org.entity.PageResponse;
+import com.org.entity.SortInfo;
+import org.hibernate.Criteria;
+import org.hibernate.HibernateException;
+import org.hibernate.Session;
+import org.hibernate.criterion.*;
+import org.springframework.orm.hibernate3.HibernateCallback;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-@SuppressWarnings("unchecked")
-public class GenericHibernateDao<T extends Serializable, PK extends Serializable> extends HibernateDaoSupport implements GenericDao<T, PK>{
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+
+public abstract class GenericHibernateDao<T extends Serializable, PK extends Serializable> extends HibernateDaoSupport implements GenericDao<T, PK>{
 
     //实体类类型由构造方法直接赋值
     private Class<T> entityClass;
@@ -79,12 +84,37 @@ public class GenericHibernateDao<T extends Serializable, PK extends Serializable
         return pageCount;
     }
 
-    public List<T> findByPageNumber(PageRequest pageRequest, Object o) {
+    public PageResponse<T> findByPageNumber(final PageRequest pageRequest, Object o) {
         List<T> ts = new ArrayList<T>();
-        String sortFieldName = isEmpty(pageRequest.getSortField()) ? getD
-        if(this.getTotalCount() > 0) {
-            DetachedCriteria detachedCriteria = DetachedCriteria.forClass(this.entityClass);
-
+        String sortFieldName = isEmpty(pageRequest.getSortField()) ? getDefaultSortFieldName() : pageRequest.getSortField();
+        List<SortInfo> sortInfos = new ArrayList<SortInfo>();
+        if(!isEmpty(sortFieldName)) {
+            sortInfos = SortInfo.initSortFieldName(sortFieldName);
         }
+        if(this.getTotalCount(o) > 0) {
+            final DetachedCriteria detachedCriteria = DetachedCriteria.forClass(this.entityClass);
+            detachedCriteria.add(Example.create(o));
+            for(SortInfo sortInfo : sortInfos) {
+                if(sortInfo.getSortOrder().equals("desc")) {
+                    detachedCriteria.addOrder(Order.desc(sortInfo.getSortFieldName()));
+                }else{
+                    detachedCriteria.addOrder(Order.asc(sortInfo.getSortFieldName()));
+                }
+            }
+            ts = getHibernateTemplate().execute(new HibernateCallback<List<T>>() {
+                public List<T> doInHibernate(Session session) throws HibernateException, SQLException {
+                    Criteria criteria = detachedCriteria.getExecutableCriteria(session);
+                    criteria.setFirstResult(pageRequest.getStartIndex());
+                    criteria.setMaxResults(pageRequest.getEachPageCount());
+                    System.out.println(criteria.list().get(0).toString());
+                    return criteria.list();
+                }
+            });
+        }
+        PageResponse pageResponse = new PageResponse<T>();
+        pageResponse.setPageRequest(pageRequest);
+        pageResponse.setTotalCount(this.getTotalCount(o));
+        pageResponse.setResult(ts);
+        return pageResponse;
     }
 }

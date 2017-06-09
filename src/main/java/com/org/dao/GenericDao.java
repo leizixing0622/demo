@@ -1,6 +1,7 @@
 package com.org.dao;
 
 import com.org.entity.PageRequest;
+import com.org.entity.PageResponse;
 
 import java.io.Serializable;
 import java.util.List;
@@ -26,5 +27,7 @@ public interface GenericDao<T extends Serializable, PK extends Serializable> {
     //根据每页条数，得到页数
     public int getPageCount(int eachPageCount, Object o);
     //根据页码进行查找
-    public List<T> findByPageNumber(PageRequest pageRequest, Object o);
+    public PageResponse<T> findByPageNumber(PageRequest pageRequest, Object o);
+    //得到默认的排序列
+    public String getDefaultSortFieldName();
 }

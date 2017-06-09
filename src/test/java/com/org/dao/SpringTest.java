@@ -1,5 +1,7 @@
 package com.org.dao;
 
+import com.org.dao.demo.DemoDaoImpl;
+import com.org.entity.PageRequest;
 import com.org.entity.Websites;
 import com.org.service.demo.DemoServiceImpl;
 import org.junit.Test;
@@ -8,20 +10,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import java.util.List;
+
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations={"classpath*:/applicationContext.xml"})
 public class SpringTest {
 
     @Autowired
-    private DemoServiceImpl demoService;
+    private DemoDaoImpl demoDao;
 
     @Test
     public void testSave(){
-        Websites websites = new Websites();
-        websites.setName("xxx");
-        websites.setAlexa(new Long(100));
-        websites.setCountry("China");
-        websites.setUrl("");
-        demoService.saveWebsite(websites);
+        PageRequest pageRequest = new PageRequest(2, 2);
+        List<Websites> websitesList = demoDao.findByPageNumber(pageRequest, new Websites()).getResult();
+        for(int i = 0; i < websitesList.size(); i ++) {
+            System.out.println(websitesList.get(i));
+        }
     }
 }

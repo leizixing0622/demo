@@ -8,4 +8,7 @@ import org.springframework.stereotype.Repository;
 public class DemoDaoImpl extends GenericHibernateDao<Websites, Long> implements DemoDao{
 
 
+    public String getDefaultSortFieldName() {
+        return "id desc";
+    }
 }

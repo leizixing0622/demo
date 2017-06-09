@@ -8,9 +8,14 @@ public class PageRequest implements Serializable {
     private int eachPageCount;
     private String sortField;
     private String searchContent;
+    private int startIndex;
 
     public PageRequest(){
 
+    }
+
+    public PageRequest(int pageNumber, int eachPageCount) {
+        this(pageNumber, eachPageCount, null, null);
     }
 
     public PageRequest(int pageNumber, int eachPageCount, String sortField, String searchContent) {
@@ -50,5 +55,13 @@ public class PageRequest implements Serializable {
 
     public void setSearchContent(String searchContent) {
         this.searchContent = searchContent;
+    }
+
+    public int getStartIndex() {
+        if(this.eachPageCount <= 0) {
+            throw new IllegalArgumentException("eachPageCount must greater than zero");
+        }else{
+            return (this.getPageNumber() - 1) * eachPageCount;
+        }
     }
 }

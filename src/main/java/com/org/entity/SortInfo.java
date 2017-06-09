@@ -35,14 +35,14 @@ public class SortInfo implements Serializable {
     }
 
     //最关键的方法：格式化排序列的数据
-    public List<SortInfo> initSortFieldName(String sortFieldName) {
+    public static List<SortInfo> initSortFieldName(String sortFieldName) {
         if(sortFieldName == null) {
             return new ArrayList<SortInfo>(0);
         }else{
             List<SortInfo> sortInfos = new ArrayList<SortInfo>();
             String[] strings = sortFieldName.split(",");
             for(int i = 0; i < strings.length; i ++) {
-                String[] strings1 = strings[i].split("//s+");
+                String[] strings1 = strings[i].split("\\s+");
                 SortInfo sortInfo = new SortInfo();
                 sortInfo.setSortFieldName(strings1[0]);
                 sortInfo.setSortOrder(strings1.length == 2 ? strings1[1] : null);
